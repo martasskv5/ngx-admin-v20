@@ -4,8 +4,9 @@ import {
   Provider,
 } from "@angular/core";
 import { MAT_RIPPLE_GLOBAL_OPTIONS } from "@angular/material/core";
-import { NbAuthModule, NbDummyAuthStrategy } from "@nebular/auth";
+import { NbAuthModule } from "@nebular/auth";
 import { NbEvaIconsModule } from "@nebular/eva-icons";
+import { NbApiAuthStrategy } from "./auth/auth.strategy";
 import { NbRoleProvider, NbSecurityModule } from "@nebular/security";
 import { of } from "rxjs";
 import {
@@ -115,6 +116,7 @@ const DATA_SERVICES = [
   { provide: VisitorsAnalyticsData, useClass: VisitorsAnalyticsService },
   { provide: SecurityCamerasData, useClass: SecurityCamerasService },
   { provide: MAT_RIPPLE_GLOBAL_OPTIONS, useExisting: RippleService },
+  NbApiAuthStrategy,
 ];
 
 export class NbSimpleRoleProvider extends NbRoleProvider {
@@ -145,9 +147,8 @@ export function providerCore(): (Provider | EnvironmentProviders)[] {
       }),
       NbAuthModule.forRoot({
         strategies: [
-          NbDummyAuthStrategy.setup({
+          NbApiAuthStrategy.setup({
             name: "email",
-            delay: 3000,
           }),
         ],
         forms: {

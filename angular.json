@@ -85,7 +85,8 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "buildTarget": "ngx-admin-demo:build"
+            "buildTarget": "ngx-admin-demo:build",
+            "proxyConfig": "proxy.conf.json"
           },
           "configurations": {
             "production": {

@@ -17,9 +17,11 @@ import {
 
 import { UserData } from "@app/core/data/users";
 import { LayoutService } from "@app/core/utils";
+import { AuthService } from "@app/core/auth/auth.service";
 
 import { Subject } from "rxjs";
-import { map, takeUntil, tap } from "rxjs/operators";
+import { filter, map, takeUntil, tap } from "rxjs/operators";
+import { Router } from "@angular/router";
 
 @Component({
   selector: "ngx-header",
@@ -39,7 +41,6 @@ import { map, takeUntil, tap } from "rxjs/operators";
 })
 export class HeaderComponent implements OnInit, OnDestroy {
   private destroy$: Subject<void> = new Subject<void>();
-  userPictureOnly: boolean = true;
   user: any;
   isMaterialTheme = false;
 
@@ -80,27 +81,55 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private themeService: NbThemeService,
     private userService: UserData,
     private layoutService: LayoutService,
-    private breakpointService: NbMediaBreakpointsService
+    private breakpointService: NbMediaBreakpointsService,
+    private authService: AuthService,
+    private router: Router
   ) {}
 
   ngOnInit() {
-    this.currentTheme = this.themeService.currentTheme;
+    // Load saved theme from localStorage or use default
+    const savedTheme = localStorage.getItem('selectedTheme') || 'default';
+    this.currentTheme = savedTheme;
+    
+    if (savedTheme !== this.themeService.currentTheme) {
+      this.themeService.changeTheme(savedTheme);
+    }
 
-    this.userService
-      .getUsers()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((users: any) => (this.user = users.nick));
+    // Get authenticated user from auth service
+    const authenticatedUser = this.authService.getUser();
+    const isAuth = this.authService.isAuthenticated();
+    
+    if (authenticatedUser && isAuth) {
+      const firstName = authenticatedUser.firstName || '';
+      const lastName = authenticatedUser.lastName || '';
+      const fullName = `${firstName} ${lastName}`.trim();
+      
+      this.user = {
+        name: fullName || authenticatedUser.email,
+        id: authenticatedUser.id
+      };
+    } else {
+      // Fallback to mock user if not authenticated
+      this.userService
+        .getUsers()
+        .pipe(takeUntil(this.destroy$))
+        .subscribe((users: any) => (this.user = users.nick));
+    }
 
-    const { xl } = this.breakpointService.getBreakpointsMap();
-    this.themeService
-      .onMediaQueryChange()
+    // Listen for user menu clicks
+    this.menuService.onItemClick()
       .pipe(
-        map(([, currentBreakpoint]) => currentBreakpoint.width < xl),
+        filter(({ tag }) => tag === 'user-context-menu'),
+        map(({ item: { title } }) => title),
         takeUntil(this.destroy$)
       )
-      .subscribe(
-        (isLessThanXl: boolean) => (this.userPictureOnly = isLessThanXl)
-      );
+      .subscribe((title) => {
+        if (title === 'Log out') {
+          this.logout();
+        } else if (title === 'Profile') {
+          // Handle profile navigation if needed
+        }
+      });
 
     this.themeService
       .onThemeChange()
@@ -120,8 +149,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/auth/login']);
+  }
+
   changeTheme(themeName: string) {
     this.themeService.changeTheme(themeName);
+    localStorage.setItem('selectedTheme', themeName);
   }
 
   toggleSidebar(): boolean {
