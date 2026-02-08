@@ -47,17 +47,20 @@ export class NbApiAuthStrategy extends NbAuthStrategy {
           response,
           '/pages',
           null,
-          'Successfully logged in'
+          ['Successfully logged in']
         );
       }),
       catchError((error) => {
+        const errorMessage =
+          error?.status === 401
+            ? 'Invalid email or password'
+            : error?.error?.message || 'Login failed';
         return of(
           new NbAuthResult(
             false,
             error,
             null,
-            null,
-            error?.error?.message || 'Login failed'
+            [errorMessage]
           )
         );
       })
@@ -96,17 +99,17 @@ export class NbApiAuthStrategy extends NbAuthStrategy {
           response,
           '/pages',
           null,
-          'Successfully registered'
+          ['Successfully registered']
         );
       }),
       catchError((error) => {
+        const errorMessage = error?.error?.message || 'Registration failed';
         return of(
           new NbAuthResult(
             false,
             error,
             null,
-            null,
-            error?.error?.message || 'Registration failed'
+            [errorMessage]
           )
         );
       })
