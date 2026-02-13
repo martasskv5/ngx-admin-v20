@@ -150,11 +150,20 @@ export class NbApiAuthStrategy extends NbAuthStrategy {
     }
 
     resetPassword(data?: any): Observable<NbAuthResult> {
+        const queryParams = typeof window !== 'undefined'
+            ? new URLSearchParams(window.location.search)
+            : new URLSearchParams('');
+
+        const emailFromUrl = queryParams.get('email') ?? undefined;
+        const codeFromUrl = queryParams.get('code') ?? undefined;
+
         const resetData: ResetPasswordRequest = {
-            email: data?.email,
-            token: data?.token,
-            password: data?.password,
+            email: data?.email ?? emailFromUrl,
+            resetCode: data?.token ?? codeFromUrl,
+            newPassword: data?.password,
         };
+
+        console.log('Reset password data:', resetData);
 
         return this.authService.resetPassword(resetData).pipe(
             map(() =>
