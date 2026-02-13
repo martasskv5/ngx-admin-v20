@@ -95,7 +95,7 @@ export class NbApiAuthStrategy extends NbAuthStrategy {
                 return new NbAuthResult(
                     true,
                     response,
-                    '/auth/login',
+                    '/auth/verify-email?email=' + registrationData.email,
                     null,
                     ['Successfully registered']
                 );

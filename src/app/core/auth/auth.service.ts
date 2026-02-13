@@ -127,4 +127,8 @@ export class AuthService {
     resetPassword(data: ResetPasswordRequest): Observable<void> {
         return this.http.post<void>(`${this.apiUrl}/resetPassword`, data);
     }
+
+    resendVerificationEmail(email: string): Observable<void> {
+        return this.http.post<void>(`${this.apiUrl}/resendVerificationEmail`, { email });
+    }
 }

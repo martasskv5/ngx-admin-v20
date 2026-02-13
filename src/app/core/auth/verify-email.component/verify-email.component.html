@@ -1,1 +1,44 @@
-<p>verify-email.component works!</p>
+<nb-card class="verify-email-card">
+  <nb-card-header>Verify Your Email</nb-card-header>
+  <nb-card-body>
+    @if (!resendSuccess()) {
+      <nb-alert status="info" appearance="outline">
+        <p class="alert-message">
+          A verification link has been sent to <strong>{{ email() }}</strong
+          >.
+        </p>
+        <p class="alert-note">
+          Please check your email and click the verification link.
+        </p>
+      </nb-alert>
+    }
+
+    @if (resendSuccess()) {
+      <nb-alert status="success" appearance="outline">
+        <p class="alert-message">
+          Verification email has been resent to <strong>{{ email() }}</strong
+          >.
+        </p>
+      </nb-alert>
+    }
+
+    <button
+      nbButton
+      fullWidth
+      status="primary"
+      (click)="onResendEmail()"
+      [disabled]="isLoading()"
+    >
+      <nb-icon icon="email-outline" pack="eva"></nb-icon>
+      @if (isLoading()) {
+        <span>Sending...</span>
+      } @else {
+        <span>Resend Verification Email</span>
+      }
+    </button>
+
+    <p class="text-center">
+      <a routerLink="/auth/login" class="auth-link">Back to Login</a>
+    </p>
+  </nb-card-body>
+</nb-card>
