@@ -8,6 +8,7 @@ import {
   NbResetPasswordComponent,
 } from "@nebular/auth";
 import { VerifyEmailComponent } from "./core/auth/verify-email.component/verify-email.component";
+import { SuccessComponent } from "./core/auth/success.component/success.component";
 import { authGuard } from "./core/auth/auth.guard";
 
 export const appRoutes: Routes = [
@@ -47,6 +48,10 @@ export const appRoutes: Routes = [
       {
         path: "verify-email",
         component: VerifyEmailComponent,
+      },
+      {
+        path: "success",
+        component: SuccessComponent,
       }
     ],
   },
