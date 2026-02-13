@@ -2,7 +2,7 @@ import { inject } from '@angular/core';
 import { NbAuthStrategy, NbAuthResult } from '@nebular/auth';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { AuthService, AuthResponse, LoginRequest, RegisterRequest, ResetPasswordRequest } from './auth.service';
+import { AuthService, AuthResponse, LoginRequest, RegisterRequest, ResetPasswordRequest, RegisterResponse } from './auth.service';
 
 export class NbApiAuthStrategy extends NbAuthStrategy {
     private readonly authService = inject(AuthService);
@@ -74,28 +74,28 @@ export class NbApiAuthStrategy extends NbAuthStrategy {
         };
 
         return this.authService.register(registrationData).pipe(
-            map((response: AuthResponse) => {
+            map((response: RegisterResponse) => {
                 // Save the access token
-                this.authService.saveToken(response.accessToken);
+                // this.authService.saveToken(response.accessToken);
 
-                // Decode the JWT token to extract user information
-                const decodedToken = this.authService.decodeToken(response.accessToken);
+                // // Decode the JWT token to extract user information
+                // const decodedToken = this.authService.decodeToken(response.accessToken);
 
-                // Extract user info from token claims
-                const user = {
-                    email: decodedToken?.email || decodedToken?.sub || registrationData.email,
-                    id: decodedToken?.sub || decodedToken?.nameid,
-                    firstName: decodedToken?.given_name || registrationData.firstName,
-                    lastName: decodedToken?.family_name || registrationData.lastName,
-                    name: decodedToken?.name
-                };
+                // // Extract user info from token claims
+                // const user = {
+                //     email: decodedToken?.email || decodedToken?.sub || registrationData.email,
+                //     id: decodedToken?.sub || decodedToken?.nameid,
+                //     firstName: decodedToken?.given_name || registrationData.firstName,
+                //     lastName: decodedToken?.family_name || registrationData.lastName,
+                //     name: decodedToken?.name
+                // };
 
-                this.authService.saveUser(user);
+                // this.authService.saveUser(user);
 
                 return new NbAuthResult(
                     true,
                     response,
-                    '/pages',
+                    '/auth/login',
                     null,
                     ['Successfully registered']
                 );

@@ -31,6 +31,13 @@ export interface AuthResponse {
     refreshToken: string;
 }
 
+export interface RegisterResponse {
+    message: string;
+    userId?: string;
+    email?: string;
+    name?: string;
+}
+
 @Injectable({
     providedIn: 'root',
 })
@@ -42,8 +49,8 @@ export class AuthService {
         return this.http.post<AuthResponse>(`${this.apiUrl}/login`, credentials);
     }
 
-    register(data: RegisterRequest): Observable<AuthResponse> {
-        return this.http.post<AuthResponse>(`${this.apiUrl}/register`, data);
+    register(data: RegisterRequest): Observable<RegisterResponse> {
+        return this.http.post<RegisterResponse>(`${this.apiUrl}/register`, data);
     }
 
     logout(): void {
