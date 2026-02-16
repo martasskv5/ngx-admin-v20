@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { NbAuthStrategy, NbAuthResult } from '@nebular/auth';
 import { Observable, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError, map, switchMap } from 'rxjs/operators';
 import { AuthService, AuthResponse, LoginRequest, RegisterRequest, ResetPasswordRequest, RegisterResponse } from './auth.service';
 
 export class NbApiAuthStrategy extends NbAuthStrategy {
@@ -22,7 +22,14 @@ export class NbApiAuthStrategy extends NbAuthStrategy {
         };
 
         return this.authService.login(credentials).pipe(
-            map((response: AuthResponse) => {
+            switchMap((response: AuthResponse) => {
+                console.log('Login response received:', {
+                    hasAccessToken: !!response.accessToken,
+                    tokenType: typeof response.accessToken,
+                    tokenLength: response.accessToken?.length,
+                    tokenPreview: response.accessToken?.substring(0, 50)
+                });
+
                 // Save the access token
                 this.authService.saveToken(response.accessToken);
 
@@ -40,10 +47,20 @@ export class NbApiAuthStrategy extends NbAuthStrategy {
 
                 this.authService.saveUser(user);
 
+                // Chain the mfaStatus observable
+                return this.authService.mfaStatus().pipe(
+                    map(mfaData => ({
+                        response,
+                        mfaEnabled: mfaData.twoFactorEnabled
+                    }))
+                );
+            }),
+            map(({ response, mfaEnabled }) => {
+                const redirectUrl = mfaEnabled ? '/auth/2fa/verify' : '/auth/2fa/setup';
                 return new NbAuthResult(
                     true,
                     response,
-                    '/pages',
+                    redirectUrl,
                     null,
                     ['Successfully logged in']
                 );

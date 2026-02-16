@@ -52,6 +52,10 @@ export const appRoutes: Routes = [
       {
         path: "success",
         component: SuccessComponent,
+      },
+      {
+        path: "2fa",
+        loadChildren: () => import("./core/auth/2fa/2fa.routes").then((r) => r.twoFactorRoutes),
       }
     ],
   },

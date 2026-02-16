@@ -25,10 +25,13 @@ export interface ResetPasswordRequest {
 }
 
 export interface AuthResponse {
-    tokenType: string;
+    message: string;
     accessToken: string;
-    expiresIn: number;
     refreshToken: string;
+    expiresIn: number;
+    email: string;
+    name: string;
+    twoFactorEnabled: boolean;
 }
 
 export interface RegisterResponse {
@@ -38,19 +41,31 @@ export interface RegisterResponse {
     name?: string;
 }
 
+export interface MFASetupResponse {
+    secretKey: string;
+    qrCodeUri: string;
+    qrCodeBase64: string;
+    message: string;
+}
+
+export interface MFAValidateRequest {
+    secretKey: string;
+    code: string;
+}
+
 @Injectable({
     providedIn: 'root',
 })
 export class AuthService {
     private readonly http = inject(HttpClient);
-    private readonly apiUrl = '/api';
+    private readonly authUrl = '/api/Auth';
 
     login(credentials: LoginRequest): Observable<AuthResponse> {
-        return this.http.post<AuthResponse>(`${this.apiUrl}/login`, credentials);
+        return this.http.post<AuthResponse>(`${this.authUrl}/login`, credentials);
     }
 
     register(data: RegisterRequest): Observable<RegisterResponse> {
-        return this.http.post<RegisterResponse>(`${this.apiUrl}/register`, data);
+        return this.http.post<RegisterResponse>(`${this.authUrl}/register`, data);
     }
 
     logout(): void {
@@ -59,11 +74,23 @@ export class AuthService {
     }
 
     getToken(): string | null {
-        return localStorage.getItem('authToken');
+        const token = localStorage.getItem('authToken');
+        return token ? token.trim() : null;
     }
 
     saveToken(token: string): void {
-        localStorage.setItem('authToken', token);
+        if (!token) {
+            console.warn('Attempted to save empty token');
+            return;
+        }
+        // Trim whitespace and validate JWT format
+        const cleanToken = token.trim();
+        if (!cleanToken.includes('.') || cleanToken.split('.').length !== 3) {
+            console.error('Invalid JWT format:', cleanToken);
+            return;
+        }
+        console.log('Saving token with length:', cleanToken.length);
+        localStorage.setItem('authToken', cleanToken);
     }
 
     saveUser(user: any): void {
@@ -121,14 +148,30 @@ export class AuthService {
     }
 
     requestPassword(email: string): Observable<void> {
-        return this.http.post<void>(`${this.apiUrl}/forgotPassword`, { email });
+        return this.http.post<void>(`${this.authUrl}/forgotPassword`, { email });
     }
 
     resetPassword(data: ResetPasswordRequest): Observable<void> {
-        return this.http.post<void>(`${this.apiUrl}/resetPassword`, data);
+        return this.http.post<void>(`${this.authUrl}/resetPassword`, data);
     }
 
     resendVerificationEmail(email: string): Observable<void> {
-        return this.http.post<void>(`${this.apiUrl}/resendVerificationEmail`, { email });
+        return this.http.post<void>(`${this.authUrl}/resendVerificationEmail`, { email });
+    }
+
+    mfaSetup(): Observable<MFASetupResponse> {
+        return this.http.get<MFASetupResponse>(`${this.authUrl}/2fa/setup`);
+    }
+
+    mfaValidate(data: MFAValidateRequest): Observable<void> {
+        return this.http.post<void>(`${this.authUrl}/2fa/validate`, data);
+    }
+
+    mfaDisable(): Observable<void> {
+        return this.http.post<void>(`${this.authUrl}/2fa/disable`, {});
+    }
+
+    mfaStatus(): Observable<{ twoFactorEnabled: boolean; requiresSetup: boolean; message: string }> {
+        return this.http.get<{ twoFactorEnabled: boolean; requiresSetup: boolean; message: string }>(`${this.authUrl}/2fa/status`);
     }
 }
